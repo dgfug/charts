@@ -11,8 +11,8 @@ Trademarks: This software listing is packaged by Bitnami. The respective tradema
 ## TL;DR
 
 ```console
-  helm repo add bitnami https://charts.bitnami.com/bitnami
-  helm install my-release bitnami/kiam
+  helm repo add my-repo https://charts.bitnami.com/bitnami
+  helm install my-release my-repo/kiam
 ```
 
 > NOTE: KIAM has been designed to work on a Kubernetes cluster deployed on top of AWS, although it is possible to deploy it in other environments.
@@ -21,9 +21,9 @@ Trademarks: This software listing is packaged by Bitnami. The respective tradema
 
 Bitnami charts for Helm are carefully engineered, actively maintained and are the quickest and easiest way to deploy containers on a Kubernetes cluster that are ready to handle production workloads.
 
-This chart bootstraps a [kiam](https://github.com/bitnami/bitnami-docker-kiam) deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+This chart bootstraps a [kiam](https://github.com/bitnami/containers/tree/main/bitnami/kiam) deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
-Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment and management of Helm Charts in clusters. This Helm chart has been tested on top of [Bitnami Kubernetes Production Runtime](https://kubeprod.io/) (BKPR). Deploy BKPR to get automated TLS certificates, logging and monitoring for your applications.
+Bitnami charts can be used with [Kubeapps](https://kubeapps.dev/) for deployment and management of Helm Charts in clusters.
 
 ## Prerequisites
 
@@ -35,8 +35,8 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment
 To install the chart with the release name `my-release`:
 
 ```bash
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install my-release bitnami/kiam
+$ helm repo add my-repo https://charts.bitnami.com/bitnami
+$ helm install my-release my-repo/kiam
 ```
 
 These commands deploy a kiam application on the Kubernetes cluster in the default configuration.
@@ -81,13 +81,14 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ### kiam image parameters
 
-| Name                | Description                                      | Value                |
-| ------------------- | ------------------------------------------------ | -------------------- |
-| `image.registry`    | kiam image registry                              | `docker.io`          |
-| `image.repository`  | kiam image name                                  | `bitnami/kiam`       |
-| `image.tag`         | kiam image tag                                   | `4.0.0-debian-10-r3` |
-| `image.pullPolicy`  | kiam image pull policy                           | `IfNotPresent`       |
-| `image.pullSecrets` | Specify docker-registry secret names as an array | `[]`                 |
+| Name                | Description                                                                                          | Value                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------- | --------------------- |
+| `image.registry`    | kiam image registry                                                                                  | `docker.io`           |
+| `image.repository`  | kiam image name                                                                                      | `bitnami/kiam`        |
+| `image.tag`         | kiam image tag                                                                                       | `4.2.0-debian-11-r24` |
+| `image.digest`      | kiam image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                  |
+| `image.pullPolicy`  | kiam image pull policy                                                                               | `IfNotPresent`        |
+| `image.pullSecrets` | Specify docker-registry secret names as an array                                                     | `[]`                  |
 
 
 ### kiam server parameters
@@ -310,6 +311,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `agent.service.loadBalancerIP`           | loadBalancerIP if service type is `LoadBalancer`                             | `""`        |
 | `agent.service.loadBalancerSourceRanges` | Address that are allowed when service is LoadBalancer                        | `[]`        |
 | `agent.service.externalTrafficPolicy`    | Enable client source IP preservation                                         | `Cluster`   |
+| `agent.service.extraPorts`               | Extra ports to expose (normally used with the `sidecar` value)               | `[]`        |
 | `agent.service.annotations`              | Annotations for kiam service                                                 | `{}`        |
 | `agent.service.sessionAffinity`          | Session Affinity for Kubernetes service, can be "None" or "ClientIP"         | `None`      |
 | `agent.service.sessionAffinityConfig`    | Additional settings for the sessionAffinity                                  | `{}`        |
@@ -355,7 +357,7 @@ The command removes all the Kubernetes components associated with the chart and 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-helm install my-release --set server.resourceType=deployment bitnami/kiam
+helm install my-release --set server.resourceType=deployment my-repo/kiam
 ```
 
 The above command sets the server nodes to be deployed as Deployment objects.
@@ -363,7 +365,7 @@ The above command sets the server nodes to be deployed as Deployment objects.
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install my-release -f values.yaml bitnami/kiam
+$ helm install my-release -f values.yaml my-repo/kiam
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)

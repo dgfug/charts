@@ -36,6 +36,22 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Create a default fully qualified web node(s) name adding the installation's namespace.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "concourse.web.fullname.namespace" -}}
+{{- printf "%s-web" (include "common.names.fullname.namespace" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Create a default fully qualified worker node(s) name adding the installation's namespace.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "concourse.worker.fullname.namespace" -}}
+{{- printf "%s-worker" (include "common.names.fullname.namespace" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Create the name of the service account to use (worker)
 */}}
 {{- define "concourse.worker.serviceAccountName" -}}
@@ -229,6 +245,7 @@ Compile all warnings into a single message.
 {{- define "concourse.validateValues" -}}
 {{- $messages := list -}}
 {{- $messages := append $messages (include "concourse.validateValues.enabled" .) -}}
+{{- $messages := append $messages (include "concourse.web.conjur.validateValues" .) -}}
 {{- $messages := without $messages "" -}}
 {{- $message := join "\n" $messages -}}
 {{- if $message -}}
@@ -241,5 +258,26 @@ Compile all warnings into a single message.
 {{- if not (or .Values.web.enabled .Values.worker.enabled) -}}
 concourse: enabled
   Must set either web.enabled or worker.enabled to create a Concourse deployment
+{{- end -}}
+{{- end -}}
+
+{{/* Check Conjur parameters */}}
+{{- define "concourse.web.conjur.validateValues" -}}
+{{- if .Values.web.conjur.enabled -}}
+{{- if (empty .Values.web.conjur.applianceUrl) -}}
+{{- printf "Must set web.conjur.applianceUrl to integrate Conjur. Please set the parameter (--set web.conjur.applianceUrl=\"xxxx\")." -}}
+{{- end -}}
+{{- if (empty .Values.secrets.conjurAccount) -}}
+{{- printf "Must set secrets.conjurAccount to integrate Conjur. Please set the parameter (--set secrets.conjurAccount=\"xxxx\")." -}}
+{{- end -}}
+{{- if (empty .Values.secrets.conjurAuthnLogin) -}}
+{{- printf "Must set secrets.conjurAuthnLogin to integrate Conjur. Please set the parameter (--set secrets.conjurAuthnLogin=\"xxxx\")." -}}
+{{- end -}}
+{{- if and (empty .Values.secrets.conjurAuthnTokenFile) (empty .Values.secrets.conjurAuthnApiKey) -}}
+{{- printf "Must set either secrets.conjurAuthnApiKey or secrets.conjurAuthnTokenFile to integrate Conjur. Please set the parameter (--set secrets.conjurAuthnLogin=\"xxxx\" or --set secrets.conjurAuthnTokenFile=\"xxxx\")" -}}
+{{- end -}}
+{{- if and .Values.secrets.conjurAuthnTokenFile .Values.secrets.conjurAuthnApiKey -}}
+{{- printf "You specified both secrets.conjurAuthnTokenFile and secrets.conjurAuthnApiKey. You can only set one to integrate Conjur." -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}

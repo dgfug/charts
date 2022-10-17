@@ -1,151 +1,54 @@
 /// <reference types="cypress" />
 
-import {
-  random,
-  closeThePopups,
-  skipTheWelcomeScreen
-} from './utils'
+import { skipTheWelcomeScreen, random } from '../support/utils';
 
 before(() => {
-  skipTheWelcomeScreen()
-})
+  skipTheWelcomeScreen();
+});
 
-it('allows uploading a file', () => {
-  cy.get('a[data-test-subj="uploadFile"]').should('be.visible').click()
-  cy.get(
-    'input#filePicker',
-  ).selectFile('cypress/fixtures/test-data-to-import.ndjson', {
-    force: true
-  });
-  cy.get('[data-test-subj="dataVisualizerFileOpenImportPageButton"]')
-    .should('be.visible')
-    .click();
-  cy.fixture('testdata').then((td) => {
+it('allows uploading data', () => {
+  cy.get('[data-test-subj="uploadFile"]').click();
+  cy.get('[type=file]').selectFile(
+    'cypress/fixtures/test-data-to-import.ndjson',
+    {
+      force: true,
+    }
+  );
+  cy.get('[data-test-subj="dataVisualizerFileOpenImportPageButton"]').click();
+  cy.fixture('indexes').then((index) => {
     cy.get('[data-test-subj="dataVisualizerFileIndexNameInput"]').type(
-      `${td.testIndexName}.${random}`,
-    )
-  })
-  cy.get('[data-test-subj="dataVisualizerFileImportButton"]')
-    .should('be.visible')
-    .click();
-  cy.get('[title*="Index created is complete"]')
-    .scrollIntoView()
-    .should('be.visible');
-  cy.get('[title*="Data uploaded is complete"')
-    .scrollIntoView()
-    .should('be.visible');
-  cy.get('[title*="Index pattern created is complete"]').should(
-    'be.visible',
-  );
-  cy.get('[data-test-subj="dataVisualizerFileImportSuccessCallout"]').should(
-    'exist',
-  );
-})
-
-it('allows creating a dashboard', () => {
-  cy.visit('app/dashboards/create/')
-  closeThePopups();
-  cy.contains('button', 'Create').should('be.visible').forceClick();
-  cy.get('[data-test-subj="dashboardSaveMenuItem"]')
-    .should('have.text', 'Save')
-    .forceClick();
-  cy.fixture('testdata').then((td) => {
-    cy.get('[data-test-subj="savedObjectTitle"]')
-      .should('be.visible')
-      .type(`${td.dashboardTitle}.${random}`);
-    cy.get('[data-test-subj="dashboardDescription"]').type(
-      `${td.dashboardDescription}.${random}`,
+      `${index.newIndex.name}.${random}`
     );
-  })
-  cy.contains(
-    '[data-test-subj="confirmSaveSavedObjectButton"]',
-    'Save',
-  ).forceClick(); //forcing because there is a popup we can't control
-  cy.visit('/app/dashboards/list');
-  cy.fixture('testdata').then((td) => {
-    cy.contains(`${td.dashboardTitle}.${random}`);
-  })
-})
+  });
+  cy.get('[data-test-subj="dataVisualizerFileImportButton"]').click();
+  cy.get('[data-test-subj="dataVisualizerFileImportSuccessCallout"]');
+});
 
-it('allows creating a visualisation', () => {
+it('allows creating a dashboard and visualisation', () => {
   cy.visit('app/visualize/');
-  closeThePopups();
-  cy.contains('button', 'Create').should('be.visible').click();
-  cy.get('[data-test-subj="visType-vega"]')
-    .should('contain.text', 'Custom visualization')
-    .forceClick();
-  cy.contains('[data-test-subj="visualizeSaveButton"]', 'Save')
-    .should('exist')
-    .forceClick();
-  cy.fixture('testdata').then((td) => {
-    cy.get('[data-test-subj="savedObjectTitle"]')
-      .should('exist')
-      .type(`${td.visualizationTitle}.${random}`)
+  cy.get('[data-test-subj="createVisualizationPromptButton"]').click();
+  cy.get('[data-test-subj="visType-vega"]').forceClick();
+  cy.get('[data-test-subj="visualizeSaveButton"]').forceClick();
+  cy.fixture('visualizations').then((visualization) => {
+    cy.get('[data-test-subj="savedObjectTitle"]').type(
+      `${visualization.newVisualization.title}.${random}`
+    );
+    cy.get('[data-test-subj="viewDescription"]').type(
+      `${visualization.newVisualization.description}.${random}`
+    );
   });
-  cy.get('[id="new-dashboard-option"]').should('exist').forceClick();
-  cy.contains('Save and go').should('exist').forceClick();
-  cy.contains('Save').should('exist').click();
-  cy.fixture('testdata').then((td) => {
-    cy.get('[data-test-subj="savedObjectTitle"]')
-      .should('be.visible')
-      .type(`${td.visualizationTitle}.${random}`);
+  cy.get('[id="new-dashboard-option"]').forceClick();
+  cy.get('[data-test-subj="confirmSaveSavedObjectButton"]').forceClick();
+  cy.get('[data-test-subj="dashboardSaveMenuItem"]').click();
+  cy.fixture('dashboards').then((dashboard) => {
+    cy.get('[data-test-subj="savedObjectTitle"]').type(
+      `${dashboard.newDashboard.title}.${random}`
+    );
     cy.get('[data-test-subj="dashboardDescription"]').type(
-      `${td.dashboardDescription}.${random}`,
+      `${dashboard.newDashboard.description}.${random}`
     );
-  })
-  cy.contains(
-    '[data-test-subj="confirmSaveSavedObjectButton"]',
-    'Save',
-  ).forceClick();
-  cy.visit('/app/dashboards/list');
-  cy.fixture('testdata').then((td) => {
-    cy.contains(`${td.dashboardDescription}.${random}`);
-  })
-})
-
-it('allows adding a remote cluster', () => {
-  cy.visit('app/management/data/remote_clusters');
-  closeThePopups();
-  cy.contains('span', 'Add').should('be.visible').forceClick();
-  cy.fixture('testdata').then((td) => {
-    cy.get('[data-test-subj="remoteClusterFormNameInput"]')
-      .should('be.visible')
-      .type(`${td.remoteClusterName}${random}`, {
-        force: true
-      });
-    cy.get('[data-test-subj="comboBoxInput"]')
-      .should('be.visible')
-      .type(td.remoteCluster);
-    cy.get('[data-test-subj="remoteClusterFormSaveButton"]')
-      .should('be.visible')
-      .forceClick();
-    cy.get('[data-test-subj="remoteClusterDetailFlyout"]').contains(
-      td.remoteClusterName,
-    );
-    cy.get('#remoteClusterDetailsFlyoutTitle')
-      .should(
-        'contain.text',
-        `${td.remoteClusterName}${random}`,
-      );
-  })
-})
-
-it('allows adding of a canvas', () => {
-  cy.visit('app/canvas#/');
-  closeThePopups();
-  cy.get('[data-test-subj="create-workpad-button"]')
-    .should('be.visible')
-    .forceClick();
-  cy.fixture('testdata').then((td) => {
-    cy.get('input[value="My Canvas Workpad"]').clear().type(`${td.workpadName}${random}`);
+    cy.get('[data-test-subj="confirmSaveSavedObjectButton"]').forceClick();
+    cy.visit('/app/dashboards/list');
+    cy.contains(`${dashboard.newDashboard.title}.${random}`);
   });
-
-  cy.get('[data-test-subj="add-element-button"]')
-    .should('have.text', 'Add element')
-    .forceClick();
-  cy.contains('span', 'Text').forceClick();
-  cy.visit('app/canvas#/');
-  cy.fixture('testdata').then((td) => {
-    cy.contains(`${td.workpadName}${random}`).should('be.visible');
-  });
-})
+});

@@ -1,9 +1,9 @@
 dependencies:
 - name: memcached
   repository: https://charts.bitnami.com/bitnami
-  version: 6.0.10
+  version: 6.2.7
 - name: common
   repository: https://charts.bitnami.com/bitnami
-  version: 1.13.0
-digest: sha256:fd1e7bf80df184bec61d3edef005ba36d865166686ab114c0ba922c2b401459a
-generated: "2022-04-01T11:03:16.249136088Z"
+  version: 2.0.3
+digest: sha256:e0ad4d7cc249993c68a7e940056ac5c0a05f98db680442c781de48924dd6ccef
+generated: "2022-10-15T23:56:11.078863849Z"

@@ -1,9 +1,9 @@
-{{- $kube := or (eq .Values.executor "KubernetesExecutor") (eq .Values.executor "CeleryKubernetesExecutor") -}}
+{{- $kube := (contains "KubernetesExecutor" .Values.executor) -}}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
   name: {{ printf "%s-scheduler" (include "common.names.fullname" .) }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: scheduler
     {{- if .Values.commonLabels }}
@@ -47,6 +47,9 @@ spec:
       {{- end }}
       {{- if .Values.scheduler.nodeSelector }}
       nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.scheduler.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.scheduler.terminationGracePeriodSeconds }} 
       {{- end }}
       {{- if .Values.scheduler.tolerations }}
       tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.tolerations "context" $) | nindent 8 }}
@@ -110,7 +113,7 @@ spec:
             {{- if .Values.scheduler.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}
-          {{- if or .Values.scheduler.extraEnvVarsCM .Values.scheduler.extraEnvVarsSecret }}
+          {{- if or .Values.scheduler.extraEnvVarsCM .Values.scheduler.extraEnvVarsSecret .Values.scheduler.extraEnvVarsSecret .Values.extraEnvVarsCM .Values.extraEnvVarsSecret .Values.extraEnvVarsSecrets }}
           envFrom:
             {{- if .Values.extraEnvVarsCM }}
             - configMapRef:
@@ -127,6 +130,18 @@ spec:
             {{- if .Values.scheduler.extraEnvVarsSecret }}
             - secretRef:
                 name: {{ .Values.scheduler.extraEnvVarsSecret }}
+            {{- end }}
+            {{- if .Values.extraEnvVarsSecrets }}
+            {{- range .Values.extraEnvVarsSecrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.scheduler.extraEnvVarsSecrets }}
+            {{- range .Values.scheduler.extraEnvVarsSecrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
             {{- end }}
           {{- end }}
           {{- if not .Values.diagnosticMode.enabled }}

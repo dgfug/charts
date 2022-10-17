@@ -2,7 +2,8 @@
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
-  name: {{ include "aspnet-core.fullname" . }}-health
+  name: {{ printf "%s-health" (include "aspnet-core.fullname" .) | trunc 63 | trimSuffix "-" }}
+  namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
@@ -48,12 +49,15 @@ spec:
             {{- end }}
             backend: {{- include "common.ingress.backend" (dict "serviceName" (include "aspnet-core.fullname" $) "servicePort" "http" "context" $)  | nindent 14 }}
     {{- end }}
+    {{- if .Values.healthIngress.extraRules }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.healthIngress.extraRules "context" $) | nindent 4 }}
+    {{- end }}
   {{- if or .Values.healthIngress.tls .Values.healthIngress.extraTls .Values.healthIngress.hosts }}
   tls:
     {{- if .Values.healthIngress.tls }}
     - hosts:
         - {{ .Values.healthIngress.hostname }}
-      secretName: {{ printf "%s-tls" .Values.healthIngress.hostname }}
+      secretName: {{ printf "%s-tls" .Values.healthIngress.hostname | trunc 63 | trimSuffix "-" }}
     {{- end }}
     {{- if .Values.healthIngress.extraTls }}
     {{- toYaml .Values.healthIngress.extraTls | nindent 4 }}

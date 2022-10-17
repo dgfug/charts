@@ -30,9 +30,9 @@ spec:
         {{- end }}
         app.kubernetes.io/component: jobservice
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/jobservice/jobservice-cm.yaml") . | sha256sum }}
         checksum/configmap-env: {{ include (print $.Template.BasePath "/jobservice/jobservice-cm-envvars.yaml") . | sha256sum }}
         checksum/secret-env: {{ include (print $.Template.BasePath "/jobservice/jobservice-secret-envvars.yaml") . | sha256sum }}
+        checksum/secret-config: {{ include (print $.Template.BasePath "/jobservice/jobservice-config-secret.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/jobservice/jobservice-secrets.yaml") . | sha256sum }}
         checksum/secret-core: {{ include (print $.Template.BasePath "/core/core-secret.yaml") . | sha256sum }}
         {{- if and .Values.internalTLS.enabled (not .Values.core.tls.existingSecret) }}
@@ -163,30 +163,30 @@ spec:
               name: metrics
             {{- end }}
           {{- if not .Values.diagnosticMode.enabled }}
-          {{- if .Values.jobservice.startupProbe.enabled }}
+          {{- if .Values.jobservice.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.jobservice.customStartupProbe "context" $) | nindent 12 }}
+          {{- else if .Values.jobservice.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.jobservice.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: {{ ternary "https" "http" .Values.internalTLS.enabled }}
-          {{- else if .Values.jobservice.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.jobservice.customStartupProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.jobservice.livenessProbe.enabled }}
+          {{- if .Values.jobservice.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.jobservice.customLivenessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.jobservice.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.jobservice.livenessProbe "enabled") "context" $) | nindent 12 }}
             httpGet:
               path: /api/v1/stats
               port: {{ ternary "https" "http" .Values.internalTLS.enabled }}
               scheme: {{ ternary "https" "http" .Values.internalTLS.enabled | upper }}
-          {{- else if .Values.jobservice.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.jobservice.customLivenessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.jobservice.readinessProbe.enabled }}
+          {{- if .Values.jobservice.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.jobservice.customReadinessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.jobservice.readinessProbe.enabled }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.jobservice.readinessProbe "enabled") "context" $) | nindent 12 }}
             httpGet:
               path: /api/v1/stats
               port: {{ ternary "https" "http" .Values.internalTLS.enabled }}
               scheme: {{ ternary "https" "http" .Values.internalTLS.enabled | upper }}
-          {{- else if .Values.jobservice.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.jobservice.customReadinessProbe "context" $) | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- if .Values.jobservice.lifecycleHooks }}
@@ -217,8 +217,8 @@ spec:
         {{- end }}
       volumes:
         - name: jobservice-config
-          configMap:
-            name: {{ include "harbor.jobservice" . }}
+          secret:
+            secretName: {{ include "harbor.jobservice" . }}-config
         - name: job-logs
           {{- if and .Values.persistence.enabled (eq .Values.jobservice.jobLogger "file") }}
           persistentVolumeClaim:

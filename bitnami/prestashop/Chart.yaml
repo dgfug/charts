@@ -1,17 +1,17 @@
 annotations:
   category: E-Commerce
 apiVersion: v2
-appVersion: 1.7.8-5
+appVersion: 1.7.8-7
 dependencies:
   - condition: mariadb.enabled
     name: mariadb
     repository: https://charts.bitnami.com/bitnami
-    version: 10.x.x
+    version: 11.x.x
   - name: common
     repository: https://charts.bitnami.com/bitnami
     tags:
       - bitnami-common
-    version: 1.x.x
+    version: 2.x.x
 description: PrestaShop is a powerful open source eCommerce platform used by over 250,000 online storefronts worldwide. It is easily customizable, responsive, and includes powerful tools to drive online sales.
 engine: gotpl
 home: https://github.com/bitnami/charts/tree/master/bitnami/prestashop
@@ -23,10 +23,10 @@ keywords:
   - web
   - php
 maintainers:
-  - email: containers@bitnami.com
-    name: Bitnami
+  - name: Bitnami
+    url: https://github.com/bitnami/charts
 name: prestashop
 sources:
-  - https://github.com/bitnami/bitnami-docker-prestashop
+  - https://github.com/bitnami/containers/tree/main/bitnami/prestashop
   - https://prestashop.com/
-version: 14.0.19
+version: 15.3.5
